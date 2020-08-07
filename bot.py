@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-import discord
 import configparser
+
+import discord
 from discord.ext import commands, tasks
 from logzero import logfile
+
 from ProfileParser import *
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('galera_config.ini')
 logfile(config['bot']['logfile'])
 client = commands.Bot(command_prefix=config['bot']['bot_prefix'])
 insta = ProfileParser(profiles_filename=config['instagram']['profiles_filename'])
@@ -82,6 +84,51 @@ async def profile_list(ctx):
         embed = discord.Embed(title="", colour=discord.Colour(0xb903c9))
         embed.set_author(name=profile, icon_url=insta.profiles[profile].profile_pic_url)
         await ctx.send(embed=embed)
+
+
+@client.command(commands=['profile_pic', 'p_pic'])
+async def get_profile_pic(ctx, username):
+    try:
+        profile = insta.get_profile_by_username(username)
+        await ctx.send(profile.profile_pic_url)
+    except :
+        await ctx.send(f'Profile: "{username}" not found')
+
+
+@client.command()
+async def force_parse_profiles(ctx):
+    for profile in insta.profiles:
+
+        # функция get_new_downloaded возвращает список файлов либо False если нету изменений
+        # в качестве аргументов принимает путь к папке с файлами, функцию и профиль человека
+        new_stories = await client.loop.run_in_executor(None, get_new_downloaded,
+                                                        f'./{profile} stories/', insta.download_all_stories_by_profile,
+                                                        insta.profiles[profile])
+        print(profile, new_stories)
+        if new_stories != False:
+            guild = client.get_guild(int(config['bot']['server_id']))
+            channel = guild.get_channel(int(config['bot']['stories_channel_id']))
+            for story in new_stories:
+                await channel.send(file=discord.File(f'./{profile} stories/{story}'))
+                logger.info(f'Bot send stories success! ./{profile} stories/{story}')
+
+
+@client.command()
+async def force_parse_stories(ctx):
+    for profile in insta.profiles:
+
+        # функция get_new_downloaded возвращает список файлов либо False если нету изменений
+        # в качестве аргументов принимает путь к папке с файлами, функцию и профиль человека
+        new_stories = await client.loop.run_in_executor(None, get_new_downloaded,
+                                                        f'./{profile} stories/', insta.download_all_stories_by_profile,
+                                                        insta.profiles[profile])
+        print(profile, new_stories)
+        if new_stories != False:
+            guild = client.get_guild(int(config['bot']['server_id']))
+            channel = guild.get_channel(int(config['bot']['stories_channel_id']))
+            for story in new_stories:
+                await channel.send(file=discord.File(f'./{profile} stories/{story}'))
+                logger.info(f'Bot send stories success! ./{profile} stories/{story}')
 
 
 @client.event

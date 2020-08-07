@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-from instaloader import Instaloader, InstaloaderContext,InstaloaderException, Profile
-import pickle
-from logzero import logger
 import os
+import pickle
+
+from instaloader import Instaloader, InstaloaderContext,\
+                        InstaloaderException, Profile
+from logzero import logger
 
 
 def get_all_downloaded(path):
@@ -35,7 +37,10 @@ class ProfileParser(Instaloader, InstaloaderContext, InstaloaderException):
     profiles = {}
 
     def __init__(self, profiles_filename):
-        Instaloader.__init__(self, download_geotags=False, download_comments=False, save_metadata=False)
+        Instaloader.__init__(self,
+                             download_geotags=False,
+                             download_comments=False,
+                             save_metadata=False)
         try:
             self.load_profiles_from_file(profiles_filename)
         except EOFError:
@@ -75,3 +80,14 @@ class ProfileParser(Instaloader, InstaloaderContext, InstaloaderException):
         else:
             logger.info(f'{username} not in list')
             raise KeyError
+
+    def get_profile_by_username(self, username):
+        profile = Profile.from_username(self.context, username)
+        return profile
+
+
+class Gg:
+
+    @property
+    def chto(self) -> str:
+        return 'Ne budet'
